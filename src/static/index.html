@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MedBot AI — Clinical Symptom Checker & Health Assistant</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- Header / Top Bar -->
+  <header class="app-header">
+    <div class="header-container">
+      <div class="brand">
+        <div class="brand-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 6v12M6 12h12" />
+            <circle cx="12" cy="12" r="9" />
+          </svg>
+        </div>
+        <div>
+          <div class="brand-title">MedBot <span class="brand-badge">AI 2.0</span></div>
+          <div class="brand-subtitle">Clinical Symptom Analyzer & Triage Assistant</div>
+        </div>
+      </div>
+      <div class="header-right">
+        <div class="status-indicator">
+          <span class="status-dot"></span>
+          <span class="status-text">Random Forest Model Online</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Medical Safety Banner -->
+  <div class="safety-banner">
+    <div class="safety-content">
+      <svg class="safety-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10" />
+        <line x1="12" y1="8" x2="12" y2="12" />
+        <line x1="12" y1="16" x2="12.01" y2="16" />
+      </svg>
+      <span>
+        <strong>Medical Screening Notice:</strong> MedBot provides machine-learning clinical screening and triage suggestions for educational awareness. It does not replace professional medical diagnosis. In a medical emergency, call <strong>911 / 112</strong> or visit the nearest emergency room immediately.
+      </span>
+    </div>
+  </div>
+
+  <main class="main-container">
+    <!-- Navigation Tabs -->
+    <nav class="nav-tabs" role="tablist">
+      <button class="nav-tab active" data-tab="checker" role="tab" aria-selected="true">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+        </svg>
+        Symptom Checker
+      </button>
+      <button class="nav-tab" data-tab="chat" role="tab" aria-selected="false">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+        </svg>
+        AI Doctor Chat
+      </button>
+      <button class="nav-tab" data-tab="library" role="tab" aria-selected="false">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+        </svg>
+        Diseases Directory (<span id="diseaseCount">1,400+</span>)
+      </button>
+    </nav>
+
+    <!-- TAB 1: SYMPTOM CHECKER -->
+    <section id="tab-checker" class="tab-pane active">
+      <div class="checker-layout">
+        <!-- Left: Symptom Selector -->
+        <div class="checker-card">
+          <div class="card-header">
+            <div>
+              <h2 class="card-title">Select Your Symptoms</h2>
+              <p class="card-desc">Check all signs or discomforts you are currently experiencing</p>
+            </div>
+            <div class="selection-counter" id="selectionCountBadge">0 selected</div>
+          </div>
+
+          <!-- Symptom Search & Category Filter -->
+          <div class="search-filter-bar">
+            <div class="search-box">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
+              <input type="text" id="symptomSearchInput" placeholder="Search symptom (e.g. fever, cough, nausea, headache)..." />
+              <button id="clearSearchBtn" class="clear-search-btn" style="display:none;">&times;</button>
+            </div>
+            <div class="category-pills" id="categoryPills">
+              <button class="cat-pill active" data-cat="all">All Systems</button>
+            </div>
+          </div>
+
+          <!-- Selected Symptoms Tray -->
+          <div id="selectedTray" class="selected-tray" style="display:none;">
+            <div class="tray-label">Active Symptoms:</div>
+            <div id="selectedPillsContainer" class="selected-pills"></div>
+            <button id="clearAllSymptomsBtn" class="clear-all-link">Clear all</button>
+          </div>
+
+          <!-- Symptoms List (Populated via JS) -->
+          <div id="symptomsAccordion" class="symptoms-container">
+            <div class="loading-spinner-box">
+              <div class="spinner"></div>
+              <span>Loading clinical features...</span>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="checker-actions">
+            <button id="diagnose" class="btn btn-primary">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8" />
+                <path d="m21 21-4.3-4.3" />
+              </svg>
+              Run Clinical Diagnosis
+            </button>
+            <button id="resetCheckerBtn" class="btn btn-secondary">Reset Selection</button>
+          </div>
+        </div>
+
+        <!-- Right: Diagnosis Results Card -->
+        <div class="results-column">
+          <!-- Initial Empty State -->
+          <div id="resultEmptyState" class="result-placeholder">
+            <div class="placeholder-icon">🩺</div>
+            <h3>No Diagnosis Yet</h3>
+            <p>Select your symptoms from the left panel and click <strong>"Run Clinical Diagnosis"</strong> to see ML predictions, precautions, and specialist advice.</p>
+            <div class="quick-examples">
+              <span class="quick-example-title">Or try a common clinical presentation:</span>
+              <div class="quick-chips">
+                <button class="quick-chip" data-symptoms="fever,chills,body_aches,cough,fatigue">Flu (Fever + Cough + Body Aches)</button>
+                <button class="quick-chip" data-symptoms="fever,dry_cough,loss_of_smell,fatigue">COVID-19 (Loss of smell + Fever)</button>
+                <button class="quick-chip" data-symptoms="runny_nose,sneezing,nasal_congestion,sore_throat">Common Cold (Sneezing + Runny nose)</button>
+                <button class="quick-chip" data-symptoms="diarrhea,nausea,vomiting,abdominal_pain,fever">Food Poisoning / Stomach Flu</button>
+                <button class="quick-chip" data-symptoms="headache,light_sensitivity,nausea,dizziness">Migraine (Light sensitivity + Headache)</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Loading State -->
+          <div id="resultLoadingState" class="result-loading" style="display:none;">
+            <div class="spinner large"></div>
+            <h3>Analyzing Clinical Markers...</h3>
+            <p>Evaluating symptom feature vectors against Random Forest ensemble...</p>
+          </div>
+
+          <!-- Active Diagnosis Card -->
+          <div id="resultCard" class="diagnosis-card" style="display:none;">
+            <div class="diag-header">
+              <div class="diag-title-area">
+                <span class="diag-badge-prefix">Primary Predicted Condition</span>
+                <h3 id="diagTitle" class="diag-title">Influenza</h3>
+                <div class="diag-tags">
+                  <span id="severityBadge" class="severity-badge">Moderate</span>
+                  <span id="specialistBadge" class="specialist-badge">General Physician</span>
+                </div>
+              </div>
+              <div class="diag-confidence-gauge">
+                <div class="gauge-value" id="gaugeValue">87%</div>
+                <div class="gauge-label">Confidence</div>
+              </div>
+            </div>
+
+            <!-- Matched Symptoms Summary -->
+            <div class="diag-section">
+              <div class="section-label">Matched Reported Symptoms</div>
+              <div id="diagMatchedSymptoms" class="matched-pills"></div>
+            </div>
+
+            <!-- Condition Description -->
+            <div class="diag-section">
+              <div class="section-label">Clinical Overview</div>
+              <p id="diagDescription" class="diag-text"></p>
+            </div>
+
+            <!-- Differential Diagnoses Bars -->
+            <div class="diag-section">
+              <div class="section-label">Differential Diagnoses (Probability Breakdown)</div>
+              <div id="differentialsList" class="differentials-list"></div>
+            </div>
+
+            <!-- Recommended Precautions -->
+            <div class="diag-section">
+              <div class="section-label">Recommended Precautions & Home Care</div>
+              <ul id="precautionsList" class="precautions-list"></ul>
+            </div>
+
+            <!-- Emergency Warning Signs -->
+            <div class="emergency-box" id="redFlagsBox">
+              <div class="emergency-title">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
+                  <line x1="12" y1="9" x2="12" y2="13" />
+                  <line x1="12" y1="17" x2="12.01" y2="17" />
+                </svg>
+                Emergency Red Flags — When to Seek Immediate Care
+              </div>
+              <p id="redFlagsText" class="emergency-text"></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2: AI DOCTOR CHAT -->
+    <section id="tab-chat" class="tab-pane" style="display:none;">
+      <div class="chat-container">
+        <div class="chat-header">
+          <div class="chat-header-info">
+            <div class="chat-avatar bot-avatar">🤖</div>
+            <div>
+              <div class="chat-title">MedBot AI Consultation</div>
+              <div class="chat-desc">Describe your symptoms in natural language. Our NLP extractor will identify indicators.</div>
+            </div>
+          </div>
+          <button id="clearChatBtn" class="btn btn-small btn-secondary">Clear Chat</button>
+        </div>
+
+        <div class="chat-messages" id="chatMessages">
+          <div class="message bot-message">
+            <div class="msg-avatar">🤖</div>
+            <div class="msg-bubble">
+              <p>Hello! I am <strong>MedBot</strong>, your AI clinical assistant. Tell me what symptoms or health issues you are experiencing today.</p>
+              <p class="msg-hint">For example: <em>"I have a high fever, severe headache, chills, and body aches for the last 2 days."</em></p>
+              <div class="chat-suggestions">
+                <button class="chat-prompt-chip" data-prompt="I have a terrible sore throat, high fever, and difficulty swallowing.">Throat Pain & Fever</button>
+                <button class="chat-prompt-chip" data-prompt="Persistent dry cough, loss of taste, mild fever, and exhaustion.">Dry Cough & Loss of Taste</button>
+                <button class="chat-prompt-chip" data-prompt="Severe abdominal cramps, nausea, vomiting, and diarrhea.">Stomach Cramps & Vomiting</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="chat-input-bar">
+          <textarea id="chatInput" placeholder="Type your symptoms here (e.g. 'I woke up with a bad headache and fever...')" rows="1"></textarea>
+          <button id="chatSendBtn" class="btn btn-primary send-btn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="22" y1="2" x2="11" y2="13" />
+              <polygon points="22 2 15 22 11 13 2 9 22 2" />
+            </svg>
+            Send
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 3: DISEASES DIRECTORY -->
+    <section id="tab-library" class="tab-pane" style="display:none;">
+      <div class="library-container">
+        <div class="library-header">
+          <div>
+            <h2 class="card-title">Medical Conditions Directory</h2>
+            <p class="card-desc">Extensive database of medical diseases and conditions scraped from clinical registries</p>
+          </div>
+          <div class="search-box library-search">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+            <input type="text" id="librarySearchInput" placeholder="Search disease name..." />
+          </div>
+        </div>
+
+        <div id="diseaseGrid" class="disease-grid">
+          <div class="loading-spinner-box">
+            <div class="spinner"></div>
+            <span>Loading diseases list...</span>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="app-footer">
+    <div class="footer-content">
+      <span>MedBot AI Health Suite &copy; 2026. Built with Python Flask, Scikit-Learn Random Forest, and Modern Web Standards.</span>
+      <span class="footer-disclaimer">Not intended for clinical emergencies. Always seek qualified medical counsel.</span>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
